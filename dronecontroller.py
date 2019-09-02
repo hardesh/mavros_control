@@ -6,7 +6,6 @@ General Drone Class for MAVROS.
 Author: Harshal Deshpande
 """
 
-
 import rospy
 import time
 from std_msgs.msg import Int32, Header
@@ -24,7 +23,7 @@ class DroneController:
 		Different Modes:
 		Stabilize = 0
 		Guided = 4
-		Land = 9
+		Land = 9  (For APM Copter)
 		"""
 		# self.pos_flag = 0
 		self.pose = PoseStamped()
@@ -39,15 +38,18 @@ class DroneController:
 		self.mode_service = rospy.ServiceProxy("/mavros/set_mode", SetMode)
 		# rospy.wait_for_service("/mavros/cmd/arming")
 		self.arm_service = rospy.ServiceProxy("/mavros/cmd/arming", CommandBool)
-		self.rate = rospy.Rate(10)
+		self.rate = rospy.Rate(30)
+		
 		# self.takeoff_service = rospy.ServiceProxy('/mavros/cmd/takeoff', CommandTOL)
 
 	def state_cb(self,state):
 		self.current_state = state
 
 	def pose_callback(self,data):
+		# print("In pose_cb")
+		# print(self.pose.pose.position.z)
 		self.pose = data
-		self.rate.sleep()		
+		# self.rate.sleep()		
 	
 	def set_vel_cmd(self, vx, vy, vz, avx=0, avy=0, avz=0):
 		"""
@@ -84,6 +86,35 @@ class DroneController:
 		set_pose.pose.orientation.w = 0 
 
 		self.cmd_pos_pub.publish(set_pose)
+	
+	def goto(self,x,y,z):
+		self.arm()
+		self.fill_buffer()
+		self.mode_service(custom_mode="OFFBOARD")
+        
+		self.error_thr = 0.1
+
+		dest = PoseStamped()
+		dest.pose.position.x = x
+		dest.pose.position.y = y
+		dest.pose.position.z = z
+		count = 0
+		while self.pose.pose.position != dest.pose.position:
+			if self.current_state.mode != "OFFBOARD":
+				self.mode_service(custom_mode="OFFBOARD")
+            
+			self.set_pos(x,y,z)
+			# print count,"in loop"
+			count = count + 1
+
+			if self.pose.pose.position.x < dest.pose.position.x + self.error_thr and self.pose.pose.position.x > dest.pose.position.x - self.error_thr and \
+				self.pose.pose.position.y < dest.pose.position.y + self.error_thr and self.pose.pose.position.y > dest.pose.position.y - self.error_thr and \
+				self.pose.pose.position.z < dest.pose.position.z + self.error_thr and self.pose.pose.position.z > dest.pose.position.z - self.error_thr:
+                
+				self.land()
+				break
+
+			self.rate.sleep()
 
 	def arm(self):
 		"""
@@ -103,8 +134,19 @@ class DroneController:
 		"""
 		This function is used to land the drone.
 		"""
-		result = self.mode_service(custom_mode="9")
-		self.disarm()
+		result = self.mode_service(custom_mode="AUTO.LAND")
+		if self.pose.pose.position.z < 0.1:
+			self.disarm()
+
+	def pose_hold(self):
+		"""
+		This function is used to hold the position of the drone.
+		"""
+		hold_pos = PoseStamped()
+		hold_pos = self.pose
+
+		self.cmd_pos_pub.publish(hold_pos)
+
 
 	def fill_buffer(self):
 		"""
