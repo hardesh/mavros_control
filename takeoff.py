@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+"""
+Simple MAVROS pose controller.
+
+AUTHOR: Harshal Deshpande
+"""
 
 import rospy
 from dronecontroller import *
