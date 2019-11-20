@@ -1,0 +1,23 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "",
+        "limitSymbolsToIncludedHeaders": true
+      },
+      "includePath": [
+        "/home/harshal/catkin_build_ws/devel/include/**",
+        "/opt/ros/kinetic/include/**",
+        "/home/harshal/learn_workspace/src/hyper_car/include/**",
+        "/home/harshal/catkin_build_ws/src/kimera_rviz_markers/include/**",
+        "/home/harshal/catkin_build_ws/src/sitl_gazebo/include/**",
+        "/home/harshal/catkin_build_ws/src/mesh_rviz_plugins/include/**",
+        "/home/harshal/catkin_build_ws/src/pose_graph_tools/include/**",
+        "/home/harshal/catkin_build_ws/src/rosserial/rosserial_server/include/**",
+        "/home/harshal/catkin_build_ws/src/rosserial/rosserial_test/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS"
+    }
+  ]
+}
